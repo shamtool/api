@@ -4,6 +4,7 @@
     "version": "1.0.0",
     "license": "MIT",
     "require": {
-        "bramus/router": "~1.5"
+        "bramus/router": "~1.5",
+        "vlucas/phpdotenv": "^5.3"
     }
 }
