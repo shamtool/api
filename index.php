@@ -15,8 +15,9 @@ $router = new \Bramus\Router\Router();
 // Define routes
 $router->get('/', function() {
     global $db;
-    echo sprintf('Hello worlds! There was been currently %s recorded over the databased.',
-        $db->query("SELECT COUNT(*) FROM divmapInfo"));
+
+    $cnt = $db->query("SELECT COUNT(*) FROM divmapInfo")->fetch()[0];
+    echo sprintf('Hello worlds! There was been currently %s recorded over the databased.', $cnt);
 });
 
 // Run it!
