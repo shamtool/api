@@ -1,0 +1,9 @@
+{
+    "name": "shamtool/api",
+    "description": "Backend REST API service for shamtool",
+    "version": "1.0.0",
+    "license": "MIT",
+    "require": {
+        "bramus/router": "~1.5"
+    }
+}
