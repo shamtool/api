@@ -13,3 +13,5 @@ cd api
 # Install all dependencies
 composer install
 ```
+
+Copy the file `.env.sample` to `.env`, and fill in the SQL credentials accordingly.
