@@ -2,8 +2,8 @@
 // Primitive includes!
 require __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS']);
 $dotenv->load();
+$dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS']);
 
 // Normal includes
 require __DIR__ . '/Database.php';
