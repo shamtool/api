@@ -4,6 +4,16 @@ require_once __DIR__ . '/../STRouter.php';
 $router = STRouter::getInstance();
 
 // Define routes
+$router->set400(function() {
+    $jsonArray = array();
+    $jsonArray['status'] = "400";
+    $jsonArray['status_text'] = "Bad Request";
+
+    header('{$_SERVER["SERVER_PROTOCOL"]} 403 Bad Request');
+    header('Content-Type: application/json');
+    echo json_encode($jsonArray);
+});
+
 $router->set403(function() {
     $jsonArray = array();
     $jsonArray['status'] = "403";
@@ -17,7 +27,7 @@ $router->set403(function() {
 $router->set404(function() {
     $jsonArray = array();
     $jsonArray['status'] = "404";
-    $jsonArray['status_text'] = "Invalid API function.";
+    $jsonArray['status_text'] = "Invalid API function or parameter.";
 
     header('{$_SERVER["SERVER_PROTOCOL"]} 404 Not Found');
     header('Content-Type: application/json');

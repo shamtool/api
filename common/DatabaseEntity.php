@@ -194,6 +194,9 @@ abstract class STDatabaseEntity extends DatabaseEntity {
         }
     }
 
+    /**
+     * @throws Exception On failure (Invalid ID, connection failure, etc.)
+     */
     public function save() {
         $statement = $this->getInsertUpdateStmt();
         if ($statement && !$statement->execute()) throw new Exception("SAVE: Could not execute SQL statement");
@@ -208,6 +211,9 @@ abstract class STDatabaseEntity extends DatabaseEntity {
         }
     }
 
+    /**
+     * @throws Exception On failure (Invalid ID, connection failure, etc.)
+     */
     public function load() {
         $idPropName = $this->idPropName;
         $idFieldName = $this->fieldClassToDb[$idPropName];
@@ -230,5 +236,29 @@ abstract class STDatabaseEntity extends DatabaseEntity {
         $assoc = $statement->fetch(PDO::FETCH_ASSOC);
         if (!$assoc) throw new Exception("LOAD: Could not import data, does the ID ({$idValue}) exist?");
         $this->importAssoc($assoc);
+    }
+
+    /**
+     * Checks if the ID exists in the corresponding database table.
+     */
+    public function idExists() : bool {
+        // First check if this record exists.
+        $idPropName = $this->idPropName;
+        $idFieldName = $this->fieldClassToDb[$idPropName];
+        $idValue = $this->$idPropName;
+
+        $is_existing = false;
+        if ($idValue) {
+            // ID may be unsafe, protect it from SQL injection
+            $statement = $this->dbConn->prepare("SELECT 1 FROM {$this->tableName} WHERE {$idFieldName} = ?");
+            if ($statement == false) return false;
+            $statement->bindValue(1, $idValue);
+            if (!$statement->execute()) return false;
+
+            $result = $statement->fetch(PDO::FETCH_NUM);
+            $is_existing = $result ? $result[0] : false;
+        }
+
+        return $is_existing;
     }
 }
