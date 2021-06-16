@@ -51,7 +51,7 @@ abstract class DatabaseEntity {
                 . (new Exception())->getTraceAsString(), E_USER_ERROR);
         }
 
-        $pendingUpdate[$propName] = true;
+        $this->pendingUpdate[$propName] = true;
 
         $this->$propName = $value;
         return $this;
@@ -106,13 +106,14 @@ abstract class STDatabaseEntity extends DatabaseEntity {
     protected string $tableName;
     protected bool $isLoaded = false;
     /** The class field name for the unique identifier */
-    protected string $idClassName = "id";
+    protected string $idPropName = "id";
     protected STDatabase $dbConn;
 
     public function __construct() {
+        $class_name = get_class($this);
+
         // Make sure that the db table name is set
         if (!is_string($this->tableName)) {
-            $class_name = get_class($this);
             trigger_error("Database table name of class '{$class_name}' not defined\nStack trace:\n"
                 . (new Exception())->getTraceAsString(), E_USER_ERROR);
         }
@@ -120,62 +121,52 @@ abstract class STDatabaseEntity extends DatabaseEntity {
         parent::__construct();
 
         // Make sure ID exists
-        if (($this->fieldClassToDb[$idClassName] ?? null) == null) {
-            trigger_error("idClassName of class '{$class_name}' not defined in fieldClassToDb\nStack trace:\n"
+        if (($this->fieldClassToDb[$this->idPropName] ?? null) == null) {
+            trigger_error("idPropName of class '{$class_name}' not defined in fieldClassToDb\nStack trace:\n"
                 . (new Exception())->getTraceAsString(), E_USER_ERROR);
         }
 
         $this->dbConn = STDatabase::getInstance();
     }
 
-    /**
-     * Convenience function to generate a SELECT x FROM x WHERE x SQL statement.
-     * 
-     * @param string $idFieldName The DB field name of the unique identifier
-     * @param mixed $idValue The ID to match
-     */
-    protected function getSelectFrom($idFieldName, $idValue) : PDOStatement {
-        $fields_str = array_keys($this->fieldDbToClass).join(',');
-
-        // ID may be unsafe, protect it from SQL injection
-        $statement = $this->dbConn->prepare("SELECT {$fields_str} FROM {$this->tableName} WHERE {$idFieldName} = ? LIMIT = 1");
-        if ($statement == false) throw new Exception("Could not prepare SQL statement.");
-        $statement->bindValue(1, $idValue);
-
-        return $statement;
-    }
-
-    /**
-     * Convenience function to generate a INSERT/UPDATE SQL statement.
-     * 
-     * @param string $idFieldName The DB field name of the unique identifier
-     * @param mixed $idValue The ID to match
-     */
-    protected function getUpdateInsert($idFieldName, $idValue) : PDOStatement {
+    private function getInsertUpdateStmt() : ?PDOStatement {
         // First check if this record exists.
+        $idPropName = $this->idPropName;
+        $idFieldName = $this->fieldClassToDb[$idPropName];
+        $idValue = $this->$idPropName;
 
-        // ID may be unsafe, protect it from SQL injection
-        $statement = $this->dbConn->prepare("SELECT 1 FROM {$this->tableName} WHERE {$idFieldName} = ? LIMIT = 1");
-        if ($statement == false) throw new Exception("Could not prepare SQL statement.");
-        $statement->bindValue(1, $idValue);
-        if (!$statement->execute()) throw new Exception("Could not execute SQL statement");
-        
-        $is_existing = $statement->fetch(PDO::FETCH_NUM)[0];
+        $is_existing = false;
+        if ($idValue) {
+            // ID may be unsafe, protect it from SQL injection
+            $statement = $this->dbConn->prepare("SELECT 1 FROM {$this->tableName} WHERE {$idFieldName} = ?");
+            if ($statement == false) throw new Exception("Could not prepare SQL statement.");
+            $statement->bindValue(1, $idValue);
+            if (!$statement->execute()) throw new Exception("Could not execute SQL statement");
+
+            $result = $statement->fetch(PDO::FETCH_NUM);
+            $is_existing = $result ? $result[0] : false;
+        }
 
         if ($is_existing) {
             // UPDATE
             $update_fields = [];
-            foreach ($this->pendingUpdate as $class_key) {
-                $update_fields[] = "{$fieldClassToDb[$class_key]} = :{$class_key}";
+            foreach ($this->pendingUpdate as $class_key => $_) {
+                $update_fields[] = "{$this->fieldClassToDb[$class_key]} = :{$class_key}";
             }
-            
+
+            if (count($update_fields) == 0) {
+                // Nothing to update
+                return null;
+            }
+            $update_fields_str = implode(',', $update_fields);
+
             // ID and field value may be unsafe, protect them from SQL injection
-            $update_fields_str = update_fields.join(',');
-            $statement = $this->dbConn->prepare("UPDATE {$this->tableName} SET {$update_fields_str} WHERE {$idFieldName} = ?");
+            $escaped_id_value = $this->dbConn->quote($idValue);
+            $statement = $this->dbConn->prepare("UPDATE {$this->tableName} SET {$update_fields_str} WHERE {$idFieldName} = {$escaped_id_value}");
             if ($statement == false) throw new Exception("Could not prepare SQL statement.");
 
-            foreach ($this->pendingUpdate as $class_key) {
-                if ($class_key == $idFieldName)
+            foreach ($this->pendingUpdate as $class_key => $_) {
+                if ($class_key == $idPropName) continue;
                 $statement->bindValue(":{$class_key}", $this->$class_key);
             }
 
@@ -188,14 +179,14 @@ abstract class STDatabaseEntity extends DatabaseEntity {
                 $field_names[] = $db_key;
                 $field_value[] = ":{$class_key}";
             }
-            $field_names_str = $field_names.join(',');
-            $field_value_str = $field_value.join(',');
+            $field_names_str = implode(',', $field_names);
+            $field_value_str = implode(',', $field_value);
 
             // ID and field value may be unsafe, protect them from SQL injection
-            $statement = $this->dbConn->prepare("INSERT INTO {$this->tableName} ({$field_names_str}) VALUES (${$field_value_str})");
+            $statement = $this->dbConn->prepare("INSERT INTO {$this->tableName} ({$field_names_str}) VALUES ({$field_value_str})");
             if ($statement == false) throw new Exception("Could not prepare SQL statement.");
 
-            foreach ($this->fieldClassToDb as $class_key) {
+            foreach ($this->fieldClassToDb as $class_key => $_) {
                 $statement->bindValue(":{$class_key}", $this->$class_key);
             }
 
@@ -204,37 +195,40 @@ abstract class STDatabaseEntity extends DatabaseEntity {
     }
 
     public function save() {
+        $statement = $this->getInsertUpdateStmt();
+        if ($statement && !$statement->execute()) throw new Exception("SAVE: Could not execute SQL statement");
         $this->pendingUpdate = [];
+
+        // If the ID is null, update it with a last inserted ID (else throw if there is no ID returned).
+        $idPropName = $this->idPropName;
+        if (!$this->$idPropName) {
+            $last_id = $this->dbConn->lastInsertId();
+            if (!$last_id) throw new Exception("SAVE: Attempted to save, but no ID was returned.");
+            $this->$idPropName = $last_id;
+        }
     }
 
     public function load() {
+        $idPropName = $this->idPropName;
+        $idFieldName = $this->fieldClassToDb[$idPropName];
+        $idValue = $this->$idPropName;
+
+        if (!$idValue) {
+            $class_name = get_class($this);
+            trigger_error("ID ({$idPropName}) of class '{$class_name}' not defined\nStack trace:\n"
+                . (new Exception())->getTraceAsString(), E_USER_ERROR);
+        }
+
+        $fields_str = implode(',', array_keys($this->fieldDbToClass));
+
+        // ID may be unsafe, protect it from SQL injection
+        $statement = $this->dbConn->prepare("SELECT {$fields_str} FROM {$this->tableName} WHERE {$idFieldName} = ?");
+        if ($statement == false) throw new Exception("LOAD: Could not prepare SQL statement.");
+        $statement->bindValue(1, $idValue);
+
+        if (!$statement->execute()) throw new Exception("LOAD: Could not execute SQL statement.");
+        $assoc = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!$assoc) throw new Exception("LOAD: Could not import data, does the ID ({$idValue}) exist?");
+        $this->importAssoc($assoc);
     }
 }
-
-class Test  extends STDatabaseEntity{
-    public string $name;
-    public string $id;
-
-    protected $tableName = "all_mapsTest";
-
-    protected $fieldDbToClass = [
-        'author' => 'name',
-        'mapcode' => 'id'
-    ];
-
-    public function load() {
-        $statement = $this->getSelectFrom('id', "@6244020");
-        if (!$statement->execute()) throw new Exception("Could not execute SQL statement");
-        $this->importAssoc($statement->fetch(PDO::FETCH_ASSOC));
-    }
-
-    public function save() {
-        $this-
-    }
-}
-
-$c = new Test();
-
-$c->update("name", "proooo");
-//$c->importAssoc([22 => 69,"aaa" => "non", "dbNAMA" => "fkkkk"]);
-error_log("name is " . $c->name);

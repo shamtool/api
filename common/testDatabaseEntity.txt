@@ -1,15 +1,35 @@
-class Test  extends DatabaseEntity{
+class Test  extends STDatabaseEntity{
     public string $name;
-    public string $id;
+    public ?string $id = null;
+
+    protected string $idPropName = "id";
+
+    protected string $tableName = "all_mapsTest";
 
     protected $fieldDbToClass = [
-        'dbNAMA' => 'name',
-        2 => 'id'
+        'author' => 'name',
+        'mapcode' => 'id'
     ];
+
 }
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Load environment vars into memory
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . "/..");
+$dotenv->load();
+$dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS', 'SECRET_PASS']);
+
 $c = new Test();
+$c->id = "@6969692";
+$c->update("name", "GEKOOOOOOO");
+$c->sync();
+
+error_log("name is " . $c->name);
+
+$c->update("name", "GEKKEHYYY");
+$c->sync();
 
 //$c->update("name", "proooo");
-$c->importAssoc([22 => 69,"aaa" => "non", "dbNAMA" => "fkkkk"]);
+//$c->importAssoc([22 => 69,"aaa" => "non", "dbNAMA" => "fkkkk"]);
 error_log("name is " . $c->name);
