@@ -10,13 +10,13 @@ class STDatabase extends PDO {
     public function __construct() {
         try {
             parent::__construct(sprintf("mysql:host=%s;dbname=%s", $_ENV['DB_HOST'], $_ENV['DB_NAME']), $_ENV['DB_USER'], $_ENV['DB_PASS']);
-            $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
         } catch (PDOException $e) {
             die("Connection failed: " . $e->getMessage());
         }
     }
 
-    public static function getInstance(): STDatabase {
+    public static function getInstance() : STDatabase {
         if (self::$instance == null) {
             self::$instance = new STDatabase();
         }

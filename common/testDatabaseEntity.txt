@@ -1,0 +1,15 @@
+class Test  extends DatabaseEntity{
+    public string $name;
+    public string $id;
+
+    protected $fieldDbToClass = [
+        'dbNAMA' => 'name',
+        2 => 'id'
+    ];
+}
+
+$c = new Test();
+
+//$c->update("name", "proooo");
+$c->importAssoc([22 => 69,"aaa" => "non", "dbNAMA" => "fkkkk"]);
+error_log("name is " . $c->name);
