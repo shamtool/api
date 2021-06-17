@@ -6,7 +6,7 @@ class STUtils {
      */
     public static function parseMapCode(string|int|null $code) : ?int {
         if ($code == null) return null;
-        if (is_int($code) && (int)$code >= 0) return (int)$code;
+        if (is_numeric($code) && is_numeric((int)$code) && (int)$code >= 0) return (int)$code;
         $matches = null;
         preg_match("/^@(\d+)$/m", $code, $matches);
         $match = $matches[0] ?? null;
@@ -61,7 +61,8 @@ class STUtils {
      * 
      * @throws Exception On failure
      */
-    public static function queryToInt(array $queryArr, string $param, bool $allowNull = true) : ?int {
+    public static function queryToInt(array $queryArr, string $param, bool $allowNull = true,
+                                      int|null $min = null, int|null $max = null) : ?int {
         $value = $queryArr[$param] ?? null;
         if ($value == null) {
             if ($allowNull)
@@ -70,8 +71,14 @@ class STUtils {
                 throw new Exception("Expected Integer for '{$param}', got empty instead.");
         }
 
-        if (is_integer($value)) {
-            return (int)$value;
+        if (is_numeric($value) && is_int((int)$value)) {
+            $ret = (int)$value;
+            if ($min != null && $ret < $min)
+                throw new Exception("Expected Integer with a minimum of {$min} for '{$param}', got '{$value}' instead.");
+            if ($max != null && $ret > $max)
+                throw new Exception("Expected Integer with a maximum of {$min} for '{$param}', got '{$value}' instead."); 
+            
+            return $ret;
         }
 
         throw new Exception("Expected Integer for '{$param}', got '{$value}' instead."); 

@@ -9,7 +9,7 @@ $router->set400(function() {
     $jsonArray['status'] = "400";
     $jsonArray['status_text'] = "Bad Request";
 
-    header('{$_SERVER["SERVER_PROTOCOL"]} 403 Bad Request');
+    header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
     header('Content-Type: application/json');
     echo json_encode($jsonArray);
 });
@@ -19,7 +19,7 @@ $router->set403(function() {
     $jsonArray['status'] = "403";
     $jsonArray['status_text'] = "You do not have the privileges to use this API function.";
 
-    header('{$_SERVER["SERVER_PROTOCOL"]} 403 Forbidden');
+    header("{$_SERVER['SERVER_PROTOCOL']} 403 Forbidden");
     header('Content-Type: application/json');
     echo json_encode($jsonArray);
 });
@@ -29,7 +29,7 @@ $router->set404(function() {
     $jsonArray['status'] = "404";
     $jsonArray['status_text'] = "Invalid API function or parameter.";
 
-    header('{$_SERVER["SERVER_PROTOCOL"]} 404 Not Found');
+    header("{$_SERVER['SERVER_PROTOCOL']} 404 Not Found");
     header('Content-Type: application/json');
     echo json_encode($jsonArray);
 });

@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../STDatabase.php';
 require_once __DIR__ . '/DatabaseEntity.php';
 
 /** Represents a basic TFM map */
@@ -27,6 +28,11 @@ class CommonMap extends STDatabaseEntity {
         'image_url' => 'imageUrl',
     ];
 
+    public function __construct(int|null $id = null) {
+        parent::__construct();
+        $this->id = $id;
+    }
+
     public function exportRESTObj() : array {
         $div_map = new DivinityMap($this);
         $div_map->id = $this->id;
@@ -37,7 +43,7 @@ class CommonMap extends STDatabaseEntity {
             'id' => $this->id,
             'mapCode' => $this->mapCode,
             'author' => $this->author,
-            'xml' => $this->xml,
+            //'xml' => $this->xml,
             'wind' => $this->wind,
             'gravity' => $this->gravity,
             'mgoc' => $this->mgoc,
@@ -45,6 +51,24 @@ class CommonMap extends STDatabaseEntity {
             'isDivinity' => $div_map->idExists(),
             'isSpiritual' => $spi_map->idExists(),
         ];
+    }
+
+    /**
+     * Checks if the mapCode exists in the database.
+     */
+    static public function findIdByMapCode(int $mapCode) : ?int {
+        $ret_id = null;
+        if ($mapCode) {
+            $statement = STDatabase::getInstance()->prepare("SELECT id FROM all_maps WHERE mapcode = ?");
+            if ($statement == false) return null;
+            $statement->bindValue(1, $mapCode);
+            if (!$statement->execute()) return null;
+
+            $result = $statement->fetch(PDO::FETCH_NUM);
+            $ret_id = $result ? $result[0] : null;
+        }
+
+        return $ret_id;
     }
 }
 
@@ -140,7 +164,7 @@ class SpiritualMap extends SpiDivMap {
     public ?bool $noB = null;
 
     // DB properties
-    protected string $tableName = "mapdb_divinity";
+    protected string $tableName = "mapdb_spiritual";
     protected string $idPropName = "id";
     protected $fieldDbToClass = [
         'id' => 'id',
@@ -150,7 +174,7 @@ class SpiritualMap extends SpiDivMap {
         'no_motor' => 'noMotor',
         'water' => 'water',
         'timer' => 'timer',
-        'no_b' => 'noBalloon',
+        'no_b' => 'noB',
     ];
     
     public function exportRESTObj() : array {

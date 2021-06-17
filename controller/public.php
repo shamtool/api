@@ -47,7 +47,7 @@ $router->get('/mapinfo/(\d+)/xml', function($mapId) use ($router) {
     echo $map->xml;
 });
 
-$router->get('/mapinfo/(\d+)', function($mapId) use ($db, $router) {
+$router->get('/mapinfo/(\d+)', function($mapId) use ($router) {
     $mapId = (int)$mapId;
     $map = new CommonMap();
     $map->id = $mapId;

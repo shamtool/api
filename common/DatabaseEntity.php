@@ -94,8 +94,8 @@ abstract class DatabaseEntity {
      * 
      * @throws Exception On any error setting the property
      */
-    public function update(string $propName, int|float|string|bool $value) : self {
-        if (!$this->fieldClassToMethod[$propName] ?? null) {
+    public function update(string $propName, int|float|string|bool|null $value) : self {
+        if (!$this->fieldClassToDb[$propName] ?? null) {
             $class_name = get_class($this);
             trigger_error("Tried to set a non-existent property '{$propName}' of class '{$class_name}'\nStack trace:\n"
                 . (new Exception())->getTraceAsString(), E_USER_ERROR);
