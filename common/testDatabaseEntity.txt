@@ -7,10 +7,22 @@ class Test  extends STDatabaseEntity{
     protected string $tableName = "all_mapsTest";
 
     protected $fieldDbToClass = [
-        'author' => 'name',
+        'author' => 'nama',
         'mapcode' => 'id'
     ];
 
+    protected $fieldClassToMethod = [
+        'nama' => ['get' => 'getName', 'set' => 'setName'],
+    ];
+
+    protected function getName() {
+        return $this->nama ?? null;
+    }
+    
+    protected function setName(?string $name) {
+        if (!$name) return;
+        $this->nama = $name;
+    }
 }
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -22,14 +34,15 @@ $dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS', 'SECRET_PASS']);
 
 $c = new Test();
 $c->id = "@6969692";
-$c->update("name", "GEKOOOOOOO");
+$c->update("nama", "GEKOOOOOOO");
+error_log("before sync name is " . $c->nama);
 $c->sync();
 
-error_log("name is " . $c->name);
+error_log("name is " . $c->nama);
 
-$c->update("name", "GEKKEHYYY");
+$c->update("nama", "GEKKEHYYY");
 $c->sync();
 
 //$c->update("name", "proooo");
 //$c->importAssoc([22 => 69,"aaa" => "non", "dbNAMA" => "fkkkk"]);
-error_log("name is " . $c->name);
+error_log("name is " . $c->nama);

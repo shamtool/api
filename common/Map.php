@@ -50,8 +50,6 @@ class CommonMap extends STDatabaseEntity {
 
 /** Represents a Divinity and/or Spiritual map */
 abstract class SpiDivMap extends STDatabaseEntity {
-    // TODO: this id needs to be kept in sync with CommonMap, perhaps make DBEntity support getting from callables?
-    public ?int $id = null;
     public ?int $difficulty = null;
     public ?bool $cage = null;
     public ?bool $noAnchor = null;
@@ -61,13 +59,25 @@ abstract class SpiDivMap extends STDatabaseEntity {
 
     public CommonMap $commonMap;
 
-    /**
-     * NOTE: `id` is inferred from `commonMap`, and will need to be set manually when changed.
-     */
+    protected $fieldClassToMethod = [
+        'id' => [
+            'get' => 'getId',
+            'set' => 'setId'
+        ],
+    ];
+
     public function __construct(CommonMap $commonMap) {
         parent::__construct();
         $this->commonMap = $commonMap;
         $this->id = $commonMap->id;
+    }
+
+    protected function getId() {
+        return $this->commonMap->id;
+    }
+
+    protected function setId(?int $id) {
+        $this->commonMap->id = $id;
     }
 
     public function save() {

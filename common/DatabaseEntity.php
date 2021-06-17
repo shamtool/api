@@ -18,13 +18,13 @@ abstract class DatabaseEntity {
      */
     protected $fieldClassToDb = [];
     /**
-     * An associative array mapping class field name to setter and getter callables.
-     * Any class names here must map from an existing value in `fieldDbToClass`, and map to valid callables.
+     * An associative array mapping class field name to setter and getter methods.
+     * Any class names here must map from an existing value in `fieldDbToClass`, and map to valid methods.
      * Each subarray should have both `get` and `set` properties defined.
      * 
-     * @var array<callable>
+     * @var array<string>
      */
-    protected $fieldClassToFn = [];
+    protected $fieldClassToMethod = [];
     /**
      * An associative array of class field names pending updates to the database.
      */
@@ -39,8 +39,8 @@ abstract class DatabaseEntity {
                     . (new Exception())->getTraceAsString(), E_USER_ERROR);
             }
 
-            // Check if this is even a valid class field or defined callable
-            if (!property_exists($this, $class_key) && !$this->fieldClassToFn[$class_key] ?? null) {
+            // Check if this is even a valid class field or defined method
+            if (!property_exists($this, $class_key) && !$this->fieldClassToMethod[$class_key] ?? null) {
                 $class_name = get_class($this);
                 trigger_error("fieldDbToClass: The class field name defined does not exist for '{$db_key}' of class '{$class_name}'\nStack trace:\n"
                     . (new Exception())->getTraceAsString(), E_USER_ERROR);
@@ -50,16 +50,16 @@ abstract class DatabaseEntity {
             $this->fieldClassToDb[$class_key] = $db_key;
         }
 
-        foreach ($this->fieldClassToFn as $class_key => $callables) {
+        foreach ($this->fieldClassToMethod as $class_key => $callables) {
             if (!$this->fieldClassToDb[$class_key]) {
                 $class_name = get_class($this);
-                trigger_error("fieldClassToFn: The class field name defined does not exist for '{$class_key}' of class '{$class_name}'\nStack trace:\n"
+                trigger_error("fieldClassToMethod: The class field name defined does not exist for '{$class_key}' of class '{$class_name}'\nStack trace:\n"
                     . (new Exception())->getTraceAsString(), E_USER_ERROR);
             }
 
-            if (!is_callable($callables["get"]) || !is_callable($callables["set"])) {
+            if (!method_exists($this, $callables["get"]) || !method_exists($this, $callables["set"])) {
                 $class_name = get_class($this);
-                trigger_error("fieldClassToFn: The getter and/or setter defined does not exist for '{$class_key}' of class '{$class_name}'\nStack trace:\n"
+                trigger_error("fieldClassToMethod: The getter and/or setter methods defined does not exist for '{$class_key}' of class '{$class_name}'\nStack trace:\n"
                     . (new Exception())->getTraceAsString(), E_USER_ERROR);
             }
         }
@@ -69,8 +69,8 @@ abstract class DatabaseEntity {
      * Sets a property, whether it is binded to callables or not.
      */
     protected function setProp($propName, $value) {
-        if ($callables = $this->fieldClassToFn[$propName] ?? null) {
-            call_user_func($callables['set'], $value);
+        if ($callables = $this->fieldClassToMethod[$propName] ?? null) {
+            call_user_func([$this, $callables['set']], $value);
         } else {
             // Regular direct class field setting
             $this->$propName = $value;
@@ -81,8 +81,8 @@ abstract class DatabaseEntity {
      * Retrieves a property, whether it is binded to callables or not.
      */
     protected function getProp($propName) {
-        if ($callables = $this->fieldClassToFn[$propName] ?? null) {
-            return call_user_func($callables['get']) ?? null;
+        if ($callables = $this->fieldClassToMethod[$propName] ?? null) {
+            return call_user_func([$this, $callables['get']]) ?? null;
         } else {
             // Regular direct class field 
             return $this->$propName ?? null;
@@ -95,7 +95,7 @@ abstract class DatabaseEntity {
      * @throws Exception On any error setting the property
      */
     public function update(string $propName, int|float|string|bool $value) : self {
-        if (!$this->fieldClassToFn[$propName] ?? null) {
+        if (!$this->fieldClassToMethod[$propName] ?? null) {
             $class_name = get_class($this);
             trigger_error("Tried to set a non-existent property '{$propName}' of class '{$class_name}'\nStack trace:\n"
                 . (new Exception())->getTraceAsString(), E_USER_ERROR);
@@ -314,50 +314,3 @@ abstract class STDatabaseEntity extends DatabaseEntity {
         return $is_existing;
     }
 }
-
-class Test  extends STDatabaseEntity{
-    public string $name;
-    public ?string $id = null;
-
-    protected string $idPropName = "id";
-
-    protected string $tableName = "all_mapsTest";
-
-    protected $fieldDbToClass = [
-        'author' => 'nama',
-        'mapcode' => 'id'
-    ];
-
-    protected $fieldClassToFn = [
-        'nama' => ['get' => 'getName', 'set' => 'setName'],
-    ];
-
-    public function getName() {
-        return $this->name;
-    }
-    
-    public function setName(string $name) {
-        $this->name = $name;
-    }
-}
-
-require_once __DIR__ . '/../vendor/autoload.php';
-
-// Load environment vars into memory
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . "/..");
-$dotenv->load();
-$dotenv->required(['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS', 'SECRET_PASS']);
-
-$c = new Test();
-$c->id = "@6969692";
-$c->update("name", "GEKOOOOOOO");
-$c->sync();
-
-error_log("name is " . $c->nama);
-
-$c->update("name", "GEKKEHYYY");
-$c->sync();
-
-//$c->update("name", "proooo");
-//$c->importAssoc([22 => 69,"aaa" => "non", "dbNAMA" => "fkkkk"]);
-error_log("name is " . $c->nama);
