@@ -4,16 +4,15 @@ require_once __DIR__ . '/../STRouter.php';
 require_once __DIR__ . '/../STUtils.php';
 require_once __DIR__ . '/../common/Map.php';
 
-
-$db = STDatabase::getInstance();
 $router = STRouter::getInstance();
 
-$router->get('/', function() use ($db) {
+$router->get('/', function() {
+    $db = STDatabase::getInstance();
     $cnt = $db->query("SELECT COUNT(*) FROM all_maps")->fetch()[0];
     echo sprintf('Hello worlds! There was been currently %s recorded over the databased.', $cnt);
 });
 
-$router->get('/mapinfo/(\d+)', function($mapId) use ($db, $router) {
+$router->get('/mapinfo/(\d+)', function($mapId) use ($router) {
     $mapId = (int)$mapId;
     $map = new CommonMap();
     $map->id = $mapId;
@@ -28,7 +27,7 @@ $router->get('/mapinfo/(\d+)', function($mapId) use ($db, $router) {
     echo json_encode($map->exportRESTObj());
 });
 
-$router->get('/mapinfo/(\d+)/xml', function($mapId) use ($db, $router) {
+$router->get('/mapinfo/(\d+)/xml', function($mapId) use ($router) {
     $mapId = (int)$mapId;
     $map = new CommonMap();
     $map->id = $mapId;
