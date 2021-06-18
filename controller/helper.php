@@ -21,7 +21,7 @@ function updateCommonMapFromReq($common_map, $map_code) {
         'wind'     => STUtils::queryToFloat($_REQUEST, "wind"),
         'gravity'  => STUtils::queryToFloat($_REQUEST, "gravity"),
         'mgoc'     => STUtils::queryToFloat($_REQUEST, "mgoc"),
-        'imageUrl' => STUtils::queryToString($_REQUEST, "imageUrl"),
+        'imageUrl' => STUtils::queryToImgUrl($_REQUEST, "imageUrl"),
     ];
     foreach ($props as $prop => $val) {
         $common_map->update($prop, $val);
@@ -40,7 +40,7 @@ $router->mount('/helper', function() use ($router) {
                 // Map exists, check if it exists as a divinity map
                 $common_map->id = $id;
                 if ($div_map->idExists())
-                    throw new Exception("The mapCode supplied ({$map_code}) already exists as Divinity.");
+                    throw new Exception("The mapCode supplied (@{$map_code}) already exists as Divinity.");
                 else
                     $common_map->load();
             } else {
@@ -91,7 +91,7 @@ $router->mount('/helper', function() use ($router) {
                 // Map exists, check if it exists as a spiritual map
                 $common_map->id = $id;
                 if ($spi_map->idExists())
-                    throw new Exception("The mapCode supplied ({$map_code}) already exists as Spiritual.");
+                    throw new Exception("The mapCode supplied (@{$map_code}) already exists as Spiritual.");
                 else
                     $common_map->load();
             } else {
