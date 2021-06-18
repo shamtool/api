@@ -36,7 +36,6 @@ $router->mount('/helper', function() use ($router) {
             // Check if the mapcode exists
             $map_code = STUtils::queryToMapCode($_REQUEST, "mapCode", false);
             if (($id = CommonMap::findIdByMapCode($map_code)) != null) {
-                error_log($id);
                 // Map exists, check if it exists as a divinity map
                 $common_map->id = $id;
                 if ($div_map->idExists())
@@ -87,7 +86,6 @@ $router->mount('/helper', function() use ($router) {
             // Check if the mapcode exists
             $map_code = STUtils::queryToMapCode($_REQUEST, "mapCode", false);
             if (($id = CommonMap::findIdByMapCode($map_code)) != null) {
-                error_log($id);
                 // Map exists, check if it exists as a spiritual map
                 $common_map->id = $id;
                 if ($spi_map->idExists())
