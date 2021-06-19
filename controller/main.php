@@ -27,7 +27,7 @@ $router->set403(function() {
 $router->set404(function() {
     $jsonArray = array();
     $jsonArray['status'] = "404";
-    $jsonArray['status_text'] = "Invalid API function or parameter.";
+    $jsonArray['status_text'] = "API function or record was not found.";
 
     header("{$_SERVER['SERVER_PROTOCOL']} 404 Not Found");
     header('Content-Type: application/json');

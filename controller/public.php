@@ -47,17 +47,30 @@ $router->get('/mapinfo/(\d+)/xml', function($mapId) use ($router) {
     echo $map->xml;
 });
 
-$router->get('/mapinfo/(\d+)', function($mapId) use ($router) {
+$router->get('/divinity/mapinfo/(\d+)', function($mapId) use ($router) {
     $mapId = (int)$mapId;
-    $map = new CommonMap();
-    $map->id = $mapId;
+    $divmap = new DivinityMap(new CommonMap($mapId));
     try {
-        $map->load();
+        $divmap->load();
     } catch (Exception $e) {
         $router->trigger404();
         return;
     }
 
     header('Content-Type: application/json');
-    echo json_encode($map->exportRESTObj());
+    echo json_encode($divmap->exportRESTObj());
+});
+
+$router->get('/spiritual/mapinfo/(\d+)', function($mapId) use ($router) {
+    $mapId = (int)$mapId;
+    $sprmap = new SpiritualMap(new CommonMap($mapId));
+    try {
+        $sprmap->load();
+    } catch (Exception $e) {
+        $router->trigger404();
+        return;
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode($sprmap->exportRESTObj());
 });
