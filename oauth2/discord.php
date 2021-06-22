@@ -24,7 +24,7 @@ try {
 
         // Get the user object.
         $user = $provider->getBasicUser();
-        printf('Hello %s#%s!<br/><br/>', $user->username, $user->discriminator);
+        printf('Hello %s#%s!', $user->username, $user->discriminator);
     }
 } catch (Exception $e) {
     echo $e->getMessage();

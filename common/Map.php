@@ -6,7 +6,7 @@ require_once __DIR__ . '/DatabaseEntity.php';
 /** Represents a basic TFM map */
 class CommonMap extends STDatabaseEntity {
     public ?int $id = null;
-    public ?string $mapCode = null;
+    public ?int $mapCode = null;
     public ?string $author = null;
     public ?string $xml = null;
     public ?int $wind = null;
