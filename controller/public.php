@@ -12,6 +12,48 @@ $router->get('/', function() {
     echo sprintf('Hello worlds! There was been currently %s recorded over the databased.', $cnt);
 });
 
+$router->get('/mapinfo', function() use ($router) {
+    $ret = [
+        'totalAll' => 0,
+        'totalDivinity' => 0,
+        'totalSpiritual' => 0,
+        'result' => []
+    ];
+
+    try {
+        $skip = STUtils::queryToInt($_REQUEST, 'skip') ?? 0;
+        $limit = STUtils::queryToInt($_REQUEST, 'limit') ?? 20;
+
+        $db = STDatabase::getInstance();
+        $stmt = $db->query("SELECT id FROM all_maps");
+        if (!$stmt) throw new Exception("Could not execute SQL statement.");
+
+        while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+            $mapId = $row[0];
+            $map = new CommonMap();
+            $map->id = $mapId;
+            $map->load();
+
+            $ret['result'][] = $map->exportRESTObj();
+            if ($map->isDivinity()) $ret['totalDivinity']++;
+            if ($map->isSpiritual()) $ret['totalSpiritual']++;
+            $ret['totalAll']++;
+        }
+    } catch (Exception $e) {
+        $jsonArray = array();
+        $jsonArray['status'] = "400";
+        $jsonArray['status_text'] = $e->getMessage();
+
+        header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
+        header('Content-Type: application/json');
+        echo json_encode($jsonArray);
+        exit(400);
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode($ret);
+});
+
 $router->get('/mapinfo/(\d+)', function($mapId) use ($router) {
     $mapId = (int)$mapId;
     $map = new CommonMap();

@@ -33,12 +33,19 @@ class CommonMap extends STDatabaseEntity {
         $this->id = $id;
     }
 
-    public function exportRESTObj() : array {
+    public function isDivinity() : bool {
         $div_map = new DivinityMap($this);
         $div_map->id = $this->id;
+        return $div_map->idExists();
+    }
+
+    public function isSpiritual() : bool {
         $spi_map = new SpiritualMap($this);
         $spi_map->id = $this->id;
+        return $spi_map->idExists();
+    }
 
+    public function exportRESTObj() : array {
         return [
             'id' => $this->id,
             'mapCode' => $this->mapCode,
@@ -48,8 +55,8 @@ class CommonMap extends STDatabaseEntity {
             'gravity' => $this->gravity,
             'mgoc' => $this->mgoc,
             'imageUrl' => $this->imageUrl,
-            'isDivinity' => $div_map->idExists(),
-            'isSpiritual' => $spi_map->idExists(),
+            'isDivinity' => $this->isDivinity(),
+            'isSpiritual' => $this->isSpiritual(),
         ];
     }
 

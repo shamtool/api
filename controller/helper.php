@@ -69,7 +69,7 @@ $router->mount('/helper', function() use ($router) {
             $jsonArray['status'] = "400";
             $jsonArray['status_text'] = $e->getMessage();
 
-            header("{$_SERVER['SERVER_PROTOCOL']} 403 Bad Request");
+            header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request");
             header('Content-Type: application/json');
             echo json_encode($jsonArray);
             exit(400);
