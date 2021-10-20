@@ -12,6 +12,10 @@ $router->get('/', function() {
     echo sprintf('Hello worlds! There was been currently %s recorded over the databased.', $cnt);
 });
 
+$router->get('/health', function() {
+    exit(200);
+});
+
 $router->get('/mapinfo', function() {
     $result = [];
     try {

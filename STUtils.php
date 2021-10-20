@@ -81,7 +81,7 @@ class STUtils {
             if ($min !== null && $ret < $min)
                 throw new Exception("Expected Integer with a minimum of {$min} for '{$param}', got '{$value}' instead.");
             if ($max !== null && $ret > $max)
-                throw new Exception("Expected Integer with a maximum of {$min} for '{$param}', got '{$value}' instead.");
+                throw new Exception("Expected Integer with a maximum of {$max} for '{$param}', got '{$value}' instead.");
 
             return $ret;
         }

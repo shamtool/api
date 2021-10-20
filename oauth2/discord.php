@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Cache;
-
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/DiscordOAuth.php';
 
