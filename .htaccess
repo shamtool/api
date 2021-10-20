@@ -1,4 +1,11 @@
+# Route all requests of non-existent paths to the main API file
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . index.php [L]
+
+# Do not allow these matching files to be accessed
+<Files ~ "\.(env|json|md)$">
+    Order allow,deny
+    Deny from all
+</Files>
